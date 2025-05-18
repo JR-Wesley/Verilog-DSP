@@ -7,7 +7,7 @@ module DDS #(
     parameter int AW = 13
 ) (
   input  logic                     clk,
-  input  logic                     rst,
+  input  logic                     rst_n,
   input  logic                     en,
   input  logic signed [PW - 1 : 0] freq,
   input  logic signed [PW - 1 : 0] phase,
@@ -16,6 +16,7 @@ module DDS #(
 
   localparam int LEN = 2 ** AW;
   localparam real PI = 3.1415926535897932;
+
   // NOTE: `initial` is only used in FPGA
   logic signed [DW-1 : 0] sine[LEN];
   initial begin
@@ -26,15 +27,16 @@ module DDS #(
 
   logic [PW-1 : 0] phaseAcc;
   always_ff @(posedge clk) begin
-    if (rst) phaseAcc <= '0;
+    if (!rst_n) phaseAcc <= '0;
     else if (en) phaseAcc <= phaseAcc + freq;
   end
 
   wire [PW-1 : 0] phaseSum = phaseAcc + phase;
   always_ff @(posedge clk) begin
-    if (rst) out <= '0;
+    if (!rst_n) out <= '0;
     else if (en) out <= sine[phaseSum[PW-1-:AW]];
   end
+
 endmodule
 
 `endif
